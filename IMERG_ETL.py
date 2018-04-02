@@ -699,9 +699,9 @@ def Extract_Support_Get_Next_3_Hour(currentHour):
     return hourToReturn
 
 
-def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str, theExtractWorkspace):
+def Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str, theExtractWorkspace):
 
-    addToLog("Extract_Do_Extract_FTP: Started") # , True)
+    addToLog("Extract_FTP: Started") # , True)
     pkl_file = open('config.pkl', 'rb')
     myConfig = pickle.load(pkl_file)
     pkl_file.close()
@@ -725,9 +725,9 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
     startDateTime = startDateTime_str
     endDateTime = endDateTime_str
 
-    addToLog("Extract_Do_Extract_FTP: dateFormat_String: " + str(dateFormat_String))
-    addToLog("Extract_Do_Extract_FTP: startDateTime: " + str(startDateTime))
-    addToLog("Extract_Do_Extract_FTP: endDateTime: " + str(endDateTime))
+    addToLog("Extract_FTP: dateFormat_String: " + str(dateFormat_String))
+    addToLog("Extract_FTP: startDateTime: " + str(startDateTime))
+    addToLog("Extract_FTP: endDateTime: " + str(endDateTime))
     x=int(str(startDateTime)[14:16])
     y=int(str(endDateTime)[14:16])
 
@@ -744,7 +744,7 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
     # Extract_Support_Get_Expected_FTP_Paths_From_DateRange_For_30Min_Datasets
     # get a list of all the files within the start and end date
     expected_FilePath_Objects_To_Extract_WithinRange = Extract_Support_Get_Expected_FTP_Paths_From_DateRange_For_30Min_Datasets(standardized_StartDate, standardized_EndDate, root_FTP_Path, the_FTP_SubFolderPath)
-    #addToLog("Extract_Do_Extract_FTP: expected_FilePath_Objects_To_Extract_WithinRange (list to process) " + str(expected_FilePath_Objects_To_Extract_WithinRange) , True)
+    #addToLog("Extract_FTP: expected_FilePath_Objects_To_Extract_WithinRange (list to process) " + str(expected_FilePath_Objects_To_Extract_WithinRange) , True)
     # KS Refactor for Early Data // Storying the Error Rasters in the return object
     errorRasters_List = []
 
@@ -752,20 +752,20 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
     if numFound == 0:
 
         if startDateTime_str == endDateTime_str:
-            addToLog("Extract_Do_Extract_FTP: ERROR: No files found for the date string "+startDateTime_str)
+            addToLog("Extract_FTP: ERROR: No files found for the date string "+startDateTime_str)
         else:
-            addToLog("Extract_Do_Extract_FTP: ERROR: No files found between "+startDateTime_str+" and "+endDateTime_str)
+            addToLog("Extract_FTP: ERROR: No files found between "+startDateTime_str+" and "+endDateTime_str)
     else:
 
         # Connect to FTP Server
         try:
 
             # QUICK REFACTOR NOTE: Something very strange was happening with the FTP and there isn't time to debug this issue.. going with URL Download instead for now.
-            #addToLog("Extract_Do_Extract_FTP: Connecting to FTP", True)
+            #addToLog("Extract_FTP: Connecting to FTP", True)
             ftp_Connection = ftplib.FTP(the_FTP_Host,the_FTP_UserName,the_FTP_UserPass)
             time.sleep(1)
 
-            addToLog("Extract_Do_Extract_FTP: Downloading TIF and TFW files for each raster", True)
+            addToLog("Extract_FTP: Downloading TIF and TFW files for each raster", True)
 
             # Holding information for the last FTP folder we changed to.
             lastFolder = ""
@@ -785,7 +785,7 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
                     else:
 
                         time.sleep(1)
-                        addToLog("Extract_Do_Extract_FTP: FTP, Changing folder to : " + str(currFTPFolder))
+                        addToLog("Extract_FTP: FTP, Changing folder to : " + str(currFTPFolder))
                         ftp_Connection.cwd("/" + currFTPFolder)
 
                         time.sleep(1)
@@ -880,11 +880,11 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
                         lastFTPFolder = curr_FilePath_Object['FTPSubFolderPath']
                         counter_FilesDownloaded += 1
                         if counter_FilesDownloaded % 100 == 0:   # if counter_FilesDownloaded % 20 == 0:
-                            addToLog("Extract_Do_Extract_FTP: Downloaded " + str(counter_FilesDownloaded) + " Rasters ....")
+                            addToLog("Extract_FTP: Downloaded " + str(counter_FilesDownloaded) + " Rasters ....")
 
                     except:
                         # If the raster file is missing or an error occurs during transfer..
-                        addToLog("Extract_Do_Extract_FTP: ERROR.  Error downloading current raster " +  str(curr_FilePath_Object['BaseRasterName']))
+                        addToLog("Extract_FTP: ERROR.  Error downloading current raster " +  str(curr_FilePath_Object['BaseRasterName']))
                         addToLog(Twf_file_to_download)
                         # KS Refactor for Early Data // Storying the Error Rasters in the return object
                         errorRasters_List.append(str(curr_FilePath_Object['BaseRasterName']))
@@ -892,10 +892,10 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
 
         except:
             e = sys.exc_info()[0]
-            errMsg = "Extract_Do_Extract_FTP: ERROR: Could not connect to FTP Server, Error Message: " + str(e)
+            errMsg = "Extract_FTP: ERROR: Could not connect to FTP Server, Error Message: " + str(e)
 
 
-    addToLog("Extract_Do_Extract_FTP: Total number of rasters downloaded: " + str(counter_FilesDownloaded))
+    addToLog("Extract_FTP: Total number of rasters downloaded: " + str(counter_FilesDownloaded))
 
     ret_ExtractObj = {
         'StartDateTime':startDateTime,
@@ -975,7 +975,7 @@ def Extract_Controller_Method(ETL_TransportObject):
     addToLog("Extract_Controller_Method: Using endDateTime_str : endDateTime :  " + str(endDateTime_str) + " : " + str(endDateTime))
 
     # Execute the Extract Process.
-    ExtractResult = Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str, extractWorkspace)
+    ExtractResult = Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str, extractWorkspace)
 
 
 
@@ -1003,7 +1003,7 @@ def Extract_Controller_Method(ETL_TransportObject):
 # Copy rasters from their scratch location to their final location.
 # Called for each extracted item
 # KS Refactor For 30 Min Datasets // Added param 'dateSTR_WithMinutes'
-def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, dateSTR, dateSTR_WithMinutes, extFileList, rasterOutputLocation, colorMapLocation):
+def Transform_CopyRaster(coor_system, extractResultObj, varList, dateSTR, dateSTR_WithMinutes, extFileList, rasterOutputLocation, colorMapLocation):
 
     # KS Refactor for boundary mask
     global g_BoundaryFolder, g_BoundaryFileName
@@ -1024,7 +1024,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
         # Keeping the code as it is, so it can be flexible to handle other cases in the future.
         for varDict in varList:
 
-            #addToLog("Transform_Do_Transform_CopyRaster: ----- DEBUG CURRENT ITEM START -----")
+            #addToLog("Transform_CopyRaster: ----- DEBUG CURRENT ITEM START -----")
 
             varName = varDict["variable_name"]
             filePrefix = varDict["file_prefix"]
@@ -1038,7 +1038,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
             hourPart = dateSTR[8:10] # Only want the hh (not yyyymmddhh)
             imerg_DateSTR = dateSTR[:-2] # Only want the yyyymmdd (not yyyymmddhh)
             current_imerg_S_String = get_IMERG_S_String_From_Hour_And_Minute(int(hourPart), int(minutePart))
-            # addToLog("Transform_Do_Transform_CopyRaster: Value of datestring for current raster: (dateSTR_WithMinutes): " + str(dateSTR_WithMinutes))
+            # addToLog("Transform_CopyRaster: Value of datestring for current raster: (dateSTR_WithMinutes): " + str(dateSTR_WithMinutes))
 
             # Build the name of the raster file we're looking for based on
             #   the configuration for the variable and find it in the list
@@ -1076,7 +1076,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
             # If we don't find the file in the list of downloaded files,
             #   skip this variable and move on; otherwise, process the file
             if not arcpy.Exists(raster_file):
-                addToLog("Transform_Do_Transform_CopyRaster No file found for expected raster_base_name, " + str(raster_base_name) + "...skipping...")
+                addToLog("Transform_CopyRaster No file found for expected raster_base_name, " + str(raster_base_name) + "...skipping...")
             else:			
                 # Add the output raster location for the full raster path
                 out_raster = os.path.join(rasterOutputLocation, raster_name)
@@ -1104,23 +1104,23 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
 								print sys.exc_info()[0]
 						
 						
-					addToLog("Transform_Do_Transform_CopyRaster: Copied "+ os.path.basename(raster_file)+" to "+str(out_raster), True)
+					addToLog("Transform_CopyRaster: Copied "+ os.path.basename(raster_file)+" to "+str(out_raster), True)
                 else:
 					
-                    addToLog("Transform_Do_Transform_CopyRaster: Raster, "+ os.path.basename(raster_file)+" already exists at output location of: "+str(out_raster), True)
+                    addToLog("Transform_CopyRaster: Raster, "+ os.path.basename(raster_file)+" already exists at output location of: "+str(out_raster), True)
 
                 # Apply a color map
                 try:
                     #out_raster=out_raster.replace("\\\\","//")
                     if arcpy.Exists(out_raster):
 						arcpy.AddColormap_management(out_raster, "#", colorMapLocation)
-						addToLog("Transform_Do_Transform_CopyRaster: Color Map has been applied to "+str(out_raster), True)
+						addToLog("Transform_CopyRaster: Color Map has been applied to "+str(out_raster), True)
                 except:
-                    addToLog("Transform_Do_Transform_CopyRaster: Error Applying color map to raster : " + str(out_raster) + " ArcPy Error Message: " + str(arcpy.GetMessages()))
+                    addToLog("Transform_CopyRaster: Error Applying color map to raster : " + str(out_raster) + " ArcPy Error Message: " + str(arcpy.GetMessages()))
                 # Define the coordinate system
                 sr = arcpy.SpatialReference(coor_system)
                 arcpy.DefineProjection_management(out_raster, sr)
-                addToLog("Transform_Do_Transform_CopyRaster: Defined coordinate system: "+ str(sr.name), True)
+                addToLog("Transform_CopyRaster: Defined coordinate system: "+ str(sr.name), True)
                 # Append the output file and it's associated variable to the
                 #   list of files processed
                 currRastObj = {
@@ -1133,7 +1133,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
             # END OF Loop (for varDict in varList:)
     except:
         e = sys.exc_info()[0]
-        addToLog("Transform_Do_Transform_CopyRaster: ERROR: Something went wrong during the transform process, Error Message: " + str(e),True)
+        addToLog("Transform_CopyRaster: ERROR: Something went wrong during the transform process, Error Message: " + str(e),True)
 
     # Return the output list
     return outputVarFileList
@@ -1156,7 +1156,7 @@ def Transform_Controller_Method(ETL_TransportObject):
         current_dateSTR_WithMinutes = currentExtractItem['DateString_WithMinutes']  # KS Refactor For 30 Min Datasets // Added date string with minutes
         current_extFileList = currentExtractItem['ExtractedFilesList']
         # KS Refactor For 30 Min Datasets // Added date string with minutes as 5th parameter
-        Transformed_File_List = Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, current_dateSTR, current_dateSTR_WithMinutes, current_extFileList, rasterOutputLocation, colorMapLocation)
+        Transformed_File_List = Transform_CopyRaster(coor_system, extractResultObj, varList, current_dateSTR, current_dateSTR_WithMinutes, current_extFileList, rasterOutputLocation, colorMapLocation)
         if len(Transformed_File_List) == 0:
             pass
         else:
@@ -1188,7 +1188,7 @@ def Transform_Controller_Method(ETL_TransportObject):
 #--------------------------------------------------------------------------
 # Load
 #--------------------------------------------------------------------------
-def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regExp_Pattern, date_Format, coor_system):
+def Load_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regExp_Pattern, date_Format, coor_system):
 
 
     mdWS = geoDB_MosaicDataset_Workspace
@@ -1201,7 +1201,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
 
         rasterFile = fileDict["out_raster_file_location"]       # Filesystem folder that holds raster files.
         rasterName = os.path.basename(rasterFile).replace(".tif","")     # different filename schema uses this -->  # os.path.basename(rasterFile).split(".")[0]
-        addToLog("Load_Do_Load_TRMM_Dataset: rasterName " + str(rasterName), True)
+        addToLog("Load_Dataset: rasterName " + str(rasterName), True)
         mosaicDSName = fileDict["mosaic_ds_name"]
         primaryDateField = fileDict["primary_date_field"]
         mosaicDS = os.path.join(mdWS, mosaicDSName)             # GeoDB/DatasetName
@@ -1210,7 +1210,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
         # For now, skip the file if the mosaic dataset doesn't exist.  Could
         #   be updated to create the mosaic dataset if it's missing
         if not arcpy.Exists(mosaicDS):
-            addToLog("Load_Do_Load_TRMM_Dataset: Mosaic dataset "+str(mosaicDSName)+", located at, " +str(mosaicDS)+" does not exist.  Skipping "+os.path.basename(rasterFile))
+            addToLog("Load_Dataset: Mosaic dataset "+str(mosaicDSName)+", located at, " +str(mosaicDS)+" does not exist.  Skipping "+os.path.basename(rasterFile))
         else:
             try:
                 # Add raster to mosaic dataset
@@ -1226,14 +1226,14 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
 														   "2", "#", "#", "#", "#", "NO_SUBFOLDERS",\
 														   "NO_DUPLICATES", "NO_PYRAMIDS", "NO_STATISTICS",\
 														   "NO_THUMBNAILS", "Add Raster Datasets","#")
-                addToLog("Load_Do_Load_TRMM_Dataset: Loaded " +str(rasterFile)+" to mosaic dataset "+str(mosaicDSName))
+                addToLog("Load_Dataset: Loaded " +str(rasterFile)+" to mosaic dataset "+str(mosaicDSName))
                 numLoaded += 1
 
 
             except:
                 #print(arcpy.GetMessages(2))
                 e = sys.exc_info()[0]
-                addToLog("Load_Do_Load_TRMM_Dataset: ERROR: Something went wrong when adding the raster to the mosaic dataset. Error Message: " + str(e) + " ArcPy Messages" + str(arcpy.GetMessages(2)))
+                addToLog("Load_Dataset: ERROR: Something went wrong when adding the raster to the mosaic dataset. Error Message: " + str(e) + " ArcPy Messages" + str(arcpy.GetMessages(2)))
                 addError = True
 
             if not addError:
@@ -1303,7 +1303,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
                                 row[idx] = attrExprList[idx]
                             cursor.updateRow(row)
 
-                    addToLog("Load_Do_Load_TRMM_Dataset: Calculated attributes for raster", True)
+                    addToLog("Load_Dataset: Calculated attributes for raster", True)
                     del cursor
 
                     # KS Refactor for Early Data // Keeping track of the last datetime object that was loaded
@@ -1314,7 +1314,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
                 # Handle errors for calculating attributes
                 except:
                     e = sys.exc_info()[0]
-                    addToLog("Load_Do_Load_TRMM_Dataset: ERROR: Error calculating attributes for raster"+str(rasterFile)+"  Error Message: "+arcpy.GetMessages() + str(e))
+                    addToLog("Load_Dataset: ERROR: Error calculating attributes for raster"+str(rasterFile)+"  Error Message: "+arcpy.GetMessages() + str(e))
     
 	                # Calculate statistics on the mosaic dataset
 
@@ -1676,7 +1676,7 @@ def Load_Controller_Method(ETL_TransportObject):
 	
     for currentTransformItem in current_TransformList:
         current_TransFileList = currentTransformItem['Transformed_File_List'] # transFileList
-        current_LoadResultObj = Load_Do_Load_TRMM_Dataset(current_TransFileList, GeoDB_Workspace, theRegEx, theDateFormat, coor_system)
+        current_LoadResultObj = Load_Dataset(current_TransFileList, GeoDB_Workspace, theRegEx, theDateFormat, coor_system)
         LoadResult_List.append(current_LoadResultObj)
     # KS Refactor for Early Data
 	
@@ -1733,334 +1733,6 @@ def PostETL_ExampleSupportMethod():
 # lastRasterName # Expecting something like : "3B42RT.2014062509.7.03hr"
 # whichComposite # Expecting something like : "1day" , "3day", "7day"
 # ftpSubfolder # Expecting something like : "/pub/gis/201406"
-
-def PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN(lastRasterName, whichComposite, ftpSubfolder, ftpParams, scratchFolder, coor_system, pathToGeoDB, rasterDataSetName):
-    # filter input
-    if whichComposite == "1day":
-        pass
-    elif whichComposite == "3day":
-        pass
-    elif whichComposite == "7day":
-        pass
-    else:
-        addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: Bad input value for 'whichComposite' : " + str(whichComposite) + ", bailing out!")
-        return
-
-    # KS Refactor For 30 Min Datasets // Need to replace the 30min part instead of the 3hr
-    newBaseName = lastRasterName.replace("30min", whichComposite)
-    TIF_FileName = newBaseName + ".tif"
-    TFW_FileName = newBaseName + ".tfw"
-    location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
-    location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)
-    subTransformScratchFolder = os.path.join(scratchFolder,whichComposite)
-    trans_Raster_File = os.path.join(subTransformScratchFolder,TIF_FileName)
-
-    # Create Temp Subfolder
-    try:
-        make_And_Validate_Folder(subTransformScratchFolder)
-    except:
-        e = sys.exc_info()[0]
-        addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: ERROR, Something went wrong when creating the sub scratch folder.  System Error Message: "+ str(e))
-
-    #addToLog("CUSTOM RASTERS SUB:  Alert L2.... Created (or tried to create) the subfolder.. ")
-
-    # Connect to FTP, download the files  # TRMMs ftp acts funny if we don't enter delays.. thats why using time.sleep(1)
-    # ftpParams : ftpHost, ftpUserName, ftpUserPass
-    time.sleep(1)
-    ftp_Connection = ftplib.FTP(ftpParams['ftpHost'],ftpParams['ftpUserName'],ftpParams['ftpUserPass'])
-    time.sleep(1)
-
-    # Change Folder FTP
-    # Extra ftpSubfolder
-    ftp_Connection.cwd(ftpSubfolder)
-    time.sleep(1)
-    # Download the TIF and World Files
-   #Githika with open(location_ToSave_TIF_File, "wb") as f:
-    #    ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
-
-    #time.sleep(1)
-
-    # Log the datetime of the raster accumulation
-    #addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: Downloaded Accumulation Raster: " + str(TIF_FileName))
-
-
-    #with open(location_ToSave_TFW_File, "wb") as f:
-    #    ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
-    #time.sleep(1)
-#Githika
-    try:
-		location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
-		with open(location_ToSave_TIF_File, "wb") as f:			
-							
-			ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
-			time.sleep(1)
-    except:
-		TIF_FileName = TIF_FileName.replace("03E", "04A")
-		location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)		
-		try:							
-			with open(location_ToSave_TIF_File, "wb") as f:			
-				ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
-				time.sleep(1)
-		except:
-			TIF_FileName = TIF_FileName.replace("04A", "04B")
-			location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
-			try:							
-				with open(location_ToSave_TIF_File, "wb") as f:			
-					ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
-					time.sleep(1)	
-			except:
-				TIF_FileName = TIF_FileName.replace("04B", "05B")
-				location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
-				try:							
-					with open(location_ToSave_TIF_File, "wb") as f:			
-						ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
-						time.sleep(1)	
-				except:
-					addToLog("",True)			
-									
-									
-									
-    try:
-		location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)
-		with open(location_ToSave_TFW_File, "wb") as f:								
-			ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
-			time.sleep(1)
-    except:					
-		TFW_FileName = TFW_FileName.replace("03E", "04A")
-		location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)
-		try:														
-			with open(location_ToSave_TFW_File, "wb") as f:								
-				ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
-				time.sleep(1)
-		except:
-			TFW_FileName = TFW_FileName.replace("04A", "04B")
-			location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)	
-			try:														
-				with open(location_ToSave_TFW_File, "wb") as f:								
-					ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
-					time.sleep(1)	
-			except:
-				TFW_FileName = TFW_FileName.replace("04B", "05B")
-				location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)	
-				try:														
-					with open(location_ToSave_TFW_File, "wb") as f:								
-						ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
-						time.sleep(1)	
-				except:
-					addToLog("",True)		
-				
-    ftp_Connection.close()
-
-    # Apply Transform (Spatial Projection) # Apply the projection BEFORE copying the raster!
-    sr = arcpy.SpatialReference(coor_system)
-    arcpy.DefineProjection_management(location_ToSave_TIF_File, sr)
-    addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: Spatial Projection, " + str(sr.name) + " applied to raster: " + str(location_ToSave_TIF_File))
-
-    # Calculate Statistics
-    arcpy.CalculateStatistics_management(location_ToSave_TIF_File,1,1,"#","SKIP_EXISTING","#")
-    addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN:  CalculateStatistics_management Finished")
-
-    # Copy Rasters from temp location to final location
-    addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN:  About to copy (refresh) File System Accumulation Raster: " + str(TIF_FileName))
-
-    #location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
-    source_FolderPath = scratchFolder                       # ex       Z:\\ETLscratch\\IMERG\\PostETL
-    source_FileName = TIF_FileName                          # ex       3B-HHR-L.MS.MRG.3IMERG.20150416-S090000-E092959.0540.V03E.7day.tif
-    source_BaseFileName = source_FileName[:-4]              # ex       3B-HHR-L.MS.MRG.3IMERG.20150416-S090000-E092959.0540.V03E.7day     #os.path.basename(TIF_FileName)
-    source_FileExtensionStrings = ["tif", "tfw", "tif.aux.xml", "tif.xml"]
-    dest_FolderPath = pathToGeoDB
-    dest_BaseFileName = rasterDataSetName
-
-    # Loop to copy all files!
-    for currentExtension in source_FileExtensionStrings:
-
-        # Get the source full path
-        current_SourceFileName = source_BaseFileName + "." + currentExtension
-        current_SourceFullFilePath = os.path.join(source_FolderPath, current_SourceFileName)
-
-        # Get the Destination full path
-        current_DestFileName = dest_BaseFileName + "." + currentExtension
-        current_DestFullFilePath = os.path.join(dest_FolderPath, current_DestFileName)
-
-        # Delete the files that already exist in that location
-        try:
-            os.remove(current_DestFullFilePath)
-            addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: Removed file: " + str(current_DestFullFilePath))
-            pass
-        except:
-            e = sys.exc_info()[0]
-            addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: ERROR: Error Removing file: " + str(current_DestFullFilePath) + " Error Message: " + str(e)) # + " ArcPy Error Message: " + str(arcpy.GetMessages()))
-            pass
-
-        # Copy function goes here!!
-        try:
-            shutil.copy(current_SourceFullFilePath, current_DestFullFilePath)
-            addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: Copied file FROM: " + str(current_SourceFullFilePath) + ", TO: " + str(current_DestFullFilePath))
-            pass
-        except:
-            e = sys.exc_info()[0]
-            addToLog("PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN: ERROR: Error copying file: " + str(current_SourceFullFilePath) + " Error Message: " + str(e)) # + " ArcPy Error Message: " + str(arcpy.GetMessages()))
-            pass
-
-    # Refactor Cleanup
-    try:
-        # old files left over from previous runs
-        HC_File_1 = r'E:\SERVIR\Data\Global\IMERG\IMERG1Day.tif.ovr'
-        HC_File_3 = r'E:\SERVIR\Data\Global\IMERG\IMERG3Day.tif.ovr'
-        HC_File_7 = r'E:\SERVIR\Data\Global\IMERG\IMERG7Day.tif.ovr'
-        try:
-            os.remove(HC_File_1)
-        except:
-            pass
-        try:
-            os.remove(HC_File_3)
-        except:
-            pass
-        try:
-            os.remove(HC_File_7)
-        except:
-            pass
-    except:
-        pass
-
- 
-
-def PostETL_Support_Build_Custom_Rasters(PostETL_CustomRaster_Params, ETL_TransportObject):
-
-    # Gather params
-    fileFolder_With_TRMM_Rasters = PostETL_CustomRaster_Params['fileFolder_With_TRMM_Rasters'] # r"C:\ksArcPy\trmm\rastout" # Settings, 'Raster_Final_Output_Location'
-    color_map = PostETL_CustomRaster_Params['color_map'] # r"C:\kris\!!Work\ETL_TRMM\SupportFiles\trmm_3hour.clr" # PLACEHOLDER
-    output_basepath = PostETL_CustomRaster_Params['output_basepath'] # "C:\\kris\\!!Work\\ETL_TRMM\\GeoDB\\TRMM.gdb"
-    raster_catalog_fullpath = PostETL_CustomRaster_Params['raster_catalog_fullpath'] # output_basepath + "\\TRMM"
-    raster_catalog_options_datetime_field = PostETL_CustomRaster_Params['raster_catalog_options_datetime_field'] # "timestamp"  #"datetime"
-    raster_catalog_options_datetime_sql_cast = PostETL_CustomRaster_Params['raster_catalog_options_datetime_sql_cast'] # "date"
-    raster_catalog_options_datetime_field_format = PostETL_CustomRaster_Params['raster_catalog_options_datetime_field_format'] # "%Y-%m-%d %H:00:00" # Query_DateFormat>%Y-%m-%d %H:00:00 # "%m-%d-%Y %I:%M:%S %p"
-    start_datetime = PostETL_CustomRaster_Params['start_datetime'] # datetime.utcnow()
-    trmm1Day_RasterCatalogName = PostETL_CustomRaster_Params['trmm1Day_RasterCatalogName'] # "TRMM1Day"
-    trmm7Day_RasterCatalogName = PostETL_CustomRaster_Params['trmm7Day_RasterCatalogName'] # "TRMM7Day"
-    trmm30Day_RasterCatalogName = PostETL_CustomRaster_Params['trmm30Day_RasterCatalogName'] # "TRMM30Day"
-    trmm1Day_ColorMapLocation = PostETL_CustomRaster_Params['trmm1Day_ColorMapLocation'] # r"C:\kris\!!Work\ETL_TRMM\SupportFiles\trmm_1day.clr"
-    trmm7Day_ColorMapLocation = PostETL_CustomRaster_Params['trmm7Day_ColorMapLocation'] # r"C:\kris\!!Work\ETL_TRMM\SupportFiles\trmm_7day.clr"
-    trmm30Day_ColorMapLocation = PostETL_CustomRaster_Params['trmm30Day_ColorMapLocation'] # r"C:\kris\!!Work\ETL_TRMM\SupportFiles\TRMM_30Day.clr"
-    workSpacePath = PostETL_CustomRaster_Params['workSpacePath'] # r"C:\kris\!!Work\ETL_TRMM\ScratchWorkspace\custom_RenameLater"
-    # 'clip_extent' <str>: the processing extent contained within "-180.0 -50.0 180.0 50.0"
-    # initialize request config objects -------------------------------------
-    factory_specifications = {
-
-        "AddColormap_management_config": { # optional, comment out/delete entire key if no color map is needed
-            "input_CLR_file":color_map
-        },
-        "CopyRaster_management_config":{
-            'config_keyword':'',
-            'background_value':'',
-            'nodata_value':'',
-            'onebit_to_eightbit':'',
-            'colormap_to_RGB':'',
-            'pixel_type':'32_BIT_UNSIGNED'#'16_BIT_UNSIGNED'
-        }
-    }
-    input_raster_catalog_options = {
-
-        'raster_catalog_fullpath': raster_catalog_fullpath,  # raster_catalog.fullpath,
-        "raster_name_field":'Name',
-        "datetime_field":raster_catalog_options_datetime_field,                 #raster_catalog.options['datetime_field'],                  # Original Val "datetime"
-        'datetime_sql_cast':raster_catalog_options_datetime_sql_cast,           # raster_catalog.options['datetime_sql_cast'],              # Original Val "date"
-        'datetime_field_format':raster_catalog_options_datetime_field_format,    # raster_catalog.options['datetime_field_format'],          # Original Val "%m-%d-%Y %I:%M:%S %p"
-        'start_datetime':start_datetime
-    }
-    # TRMM1Day config --------------------------------------------------------------------------------
-    factory_specifications_1day = deepcopy(factory_specifications)
-    factory_specifications_1day['output_raster_fullpath'] = os.path.join(output_basepath, trmm1Day_RasterCatalogName) #"TRMM1Day")
-    factory_specifications_1day['AddColormap_management_config']['input_CLR_file'] = trmm1Day_ColorMapLocation # "D:\\SERVIR\\ReferenceNode\\MapServices\\trmm_1day.clr"
-    input_raster_catalog_options_1day = deepcopy(input_raster_catalog_options)
-    input_raster_catalog_options_1day['end_datetime'] = start_datetime - timedelta(days=1)
-    trmm_1day = TRMMCustomRasterRequest({
-
-        'debug_logger':addToLog,
-        'factory_specifications':factory_specifications_1day,
-        'input_raster_catalog_options':input_raster_catalog_options_1day
-    })
-
-    # TRMM7Day config --------------------------------------------------------------------------------
-    factory_specifications_7day = deepcopy(factory_specifications)
-    factory_specifications_7day['output_raster_fullpath'] = os.path.join(output_basepath, trmm7Day_RasterCatalogName) #"TRMM7Day")
-    factory_specifications_7day['AddColormap_management_config']['input_CLR_file'] = trmm7Day_ColorMapLocation #"D:\\SERVIR\\ReferenceNode\\MapServices\\trmm_7day.clr"
-    input_raster_catalog_options_7day = deepcopy(input_raster_catalog_options)
-    input_raster_catalog_options_7day['end_datetime'] = start_datetime - timedelta(days=7)
-    trmm_7day = TRMMCustomRasterRequest({
-
-        'debug_logger':addToLog,
-        'factory_specifications':factory_specifications_7day,
-        'input_raster_catalog_options':input_raster_catalog_options_7day
-    })
-
-    # TRMM30Day config --------------------------------------------------------------------------------
-    factory_specifications_30day = deepcopy(factory_specifications)
-    factory_specifications_30day['output_raster_fullpath'] = os.path.join(output_basepath, trmm30Day_RasterCatalogName) #"TRMM30Day")
-    factory_specifications_30day['AddColormap_management_config']['input_CLR_file'] = trmm30Day_ColorMapLocation #"D:\\SERVIR\\ReferenceNode\\MapServices\\TRMM_30Day.clr"
-    input_raster_catalog_options_30day = deepcopy(input_raster_catalog_options)
-    input_raster_catalog_options_30day['end_datetime'] = start_datetime - timedelta(days=30)
-    trmm_30day = TRMMCustomRasterRequest({
-
-        'debug_logger':addToLog,
-        'factory_specifications':factory_specifications_30day,
-        'input_raster_catalog_options':input_raster_catalog_options_30day
-    })
-
-    # initialize object responsible for creating the TRMM composities
-    trmm_custom_raster_factory = TRMMCustomRasterCreator({
-
-        'workspace_fullpath': workSpacePath, 
-        'remove_all_rasters_on_finish':False,
-        'archive_options': {
-            'raster_name_prefix':"t_", # identify rasters to delete by this prefix
-            'local_raster_archive_days':30, # only keep rasters local within this many days
-            'raster_name_datetime_format':"t_%Y%m%d%H" # format of rasters to create a datetime object
-        },
-        'fileFolder_With_TRMM_Rasters' : fileFolder_With_TRMM_Rasters,
-        'debug_logger':addToLog,
-        'exception_handler':addToLog #exception_manager.handleException
-    })
-
-
-    # And for the 1, 3, and 7 day.. download them from the source and upload them.
-    try:
-        # FTP Info
-        pkl_file = open('config.pkl', 'r')
-        myConfig = pickle.load(pkl_file) #store the data from config.pkl file
-        pkl_file.close()
-        ftpParams = {
-            "ftpHost" : myConfig['ftp_host'], 
-            "ftpUserName" : myConfig['ftp_user'], 
-            "ftpUserPass" : myConfig['ftp_pswrd'] 
-        }
-
-        lastRasterName = ETL_TransportObject['Extract_Object']['ResultsObject']['ExtractResult']['lastBaseRaster']
-        lastFTPSubFolder = "/" + str(ETL_TransportObject['Extract_Object']['ResultsObject']['ExtractResult']['lastFTPFolder'])
-        scratchFolder = ETL_TransportObject['Pre_ETL_Object']['ResultsObject']['Scratch_WorkSpace_Locations']['PostETL']
-        coor_system = ETL_TransportObject['SettingsObj']['TRMM_RasterTransform_CoordSystem']
-
-        # KS Refactor 2015-06-26 # Refactor to place these accumulations in the same folder with the 3hr rasters..
-        pathToGeoDB = ETL_TransportObject['SettingsObj']['Raster_Final_Output_Location']
-
-        try:
-            PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN(lastRasterName, "1day", lastFTPSubFolder, ftpParams, scratchFolder, coor_system, pathToGeoDB, "IMERG1Day") # "TRMM1Day")
-        except:
-            e1 = sys.exc_info()[0]
-            addToLog("PostETL_Support_Build_Custom_Rasters: ERROR, Something went wrong when attempting to download and load custom raster 1day to IMERG1Day.  System Error Message: "+ str(e1))
-        try:
-            PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN(lastRasterName, "3day", lastFTPSubFolder, ftpParams, scratchFolder, coor_system, pathToGeoDB, "IMERG3Day") # "TRMM3Day")
-        except:
-            e3 = sys.exc_info()[0]
-            addToLog("PostETL_Support_Build_Custom_Rasters: ERROR, Something went wrong when attempting to download and load custom raster 3day to IMERG3Day.  System Error Message: "+ str(e3))
-        try:
-            PostETL_Download_And_Load_CustomRaster_From_TRMMOPEN(lastRasterName, "7day", lastFTPSubFolder, ftpParams, scratchFolder, coor_system, pathToGeoDB, "IMERG7Day") # "TRMM7Day")
-        except:
-            e7 = sys.exc_info()[0]
-            addToLog("PostETL_Support_Build_Custom_Rasters: ERROR, Something went wrong when attempting to download and load custom raster 7day to IMERG7Day.  System Error Message: "+ str(e7))
-    except:
-        e = sys.exc_info()[0]
-        addToLog("PostETL_Support_Build_Custom_Rasters: ERROR, Something went wrong when attempting to download and load custom rasters.  System Error Message: "+ str(e))
 
 
 # Stops the TRMM services, runs the custom raster generation routine, then restarts the TRMM services
@@ -2203,7 +1875,7 @@ def PostETL_Controller_Method(ETL_TransportObject):
     myConfig = pickle.load(pkl_file)
     pkl_file.close()
     # service_Options_List
-    TRMM_Service_Options = [{
+    Service_Options_30Min = [{
         "Description":"IMERG Mosaic Dataset Service",
         "admin_dir_URL":myConfig['admin_dir_URL'],
         "username":myConfig['username'],
@@ -2217,7 +1889,7 @@ def PostETL_Controller_Method(ETL_TransportObject):
         addToLog("PostETL_Controller_Method: No items were loaded, Service will not be stopped and restarted.  Custom rasters will not be generated.")
     else:
         try:
-            PostETL_Do_Update_Service_And_Custom_Rasters(PostETL_CustomRaster_Params, TRMM_Service_Options, ETL_TransportObject)
+            PostETL_Do_Update_Service_And_Custom_Rasters(PostETL_CustomRaster_Params, Service_Options_30Min, ETL_TransportObject)
             pass
         except:
             e = sys.exc_info()[0]
@@ -2431,7 +2103,7 @@ def main(config_Settings):
 			# Handle errors for calc statistics
         except:
 			e = sys.exc_info()[0]
-			addToLog("Load_Do_Load_TRMM_Dataset: ERROR: Error calculating statistics on mosaic dataset Error Message: "+str(e) + " ArcPy Messages: " + str(arcpy.GetMessages(2)))
+			addToLog("Load_Dataset: ERROR: Error calculating statistics on mosaic dataset Error Message: "+str(e) + " ArcPy Messages: " + str(arcpy.GetMessages(2)))
 			pass		
     except:
         e = sys.exc_info()[0]
