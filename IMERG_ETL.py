@@ -1224,7 +1224,7 @@ def Load_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regExp_Pattern, d
                 arcpy.AddRastersToMosaicDataset_management(mosaicDS, "Raster Dataset", rasterFile,\
 														   "NO_CELL_SIZES", "NO_BOUNDARY", "NO_OVERVIEWS",\
 														   "2", "#", "#", "#", "#", "NO_SUBFOLDERS",\
-														   "NO_DUPLICATES", "NO_PYRAMIDS", "NO_STATISTICS",\
+														   "OVERWRITE_DUPLICATES", "NO_PYRAMIDS", "NO_STATISTICS",\
 														   "NO_THUMBNAILS", "Add Raster Datasets","#")
                 addToLog("Load_Dataset: Loaded " +str(rasterFile)+" to mosaic dataset "+str(mosaicDSName))
                 numLoaded += 1
@@ -1588,7 +1588,7 @@ def Load_Do_ETL_For_EarlyDataset(LoadResult_List, error_Late_Rasters_List, extra
 							arcpy.AddRastersToMosaicDataset_management(mosaicDS, "Raster Dataset", rasterFile,\
 																		"NO_CELL_SIZES", "NO_BOUNDARY", "NO_OVERVIEWS",\
 																		"2", "#", "#", "#", "#", "NO_SUBFOLDERS",\
-																		"NO_DUPLICATES", "NO_PYRAMIDS", "NO_STATISTICS",\
+																		"OVERWRITE_DUPLICATES", "NO_PYRAMIDS", "NO_STATISTICS",\
 																		"NO_THUMBNAILS", "Add Raster Datasets","#")
 							addToLog("Load_Do_ETL_For_EarlyDataset: Load: Added " +str(rasterFile)+" to mosaic dataset "+str(mosaicDSName))
 							numLoaded += 1

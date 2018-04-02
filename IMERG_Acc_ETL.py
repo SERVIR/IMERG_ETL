@@ -2750,14 +2750,13 @@ def main(config_Settings):
     time_TotalScriptRun_Process = get_NewStart_Time()
 
     # Clear way to show entry in the log file for a script session start
-    addToLog("======================= SESSION START =======================")
+    addToLog("======================= SESSION START ACCUMULATIONS =======================")
 
     # Config Settings
     settingsObj = config_Settings.xmldict['ConfigObjectCollection']['ConfigObject']
 
     # Access to the Config settings example
-    current_ScriptSession_Name =  settingsObj['Name']
-    addToLog("Script Session Name is: " + current_ScriptSession_Name)
+    addToLog("Script Session Name is: IMERG ACCUMULATIONS ETL")
 
     # Set up Detailed Logging
     current_DetailedLogging_Setting = settingsObj['DetailedLogging']
