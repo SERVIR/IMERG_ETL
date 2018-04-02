@@ -1018,7 +1018,7 @@ def Extract_Support_Get_Next_3_Hour(currentHour):
 
 def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str, theExtractWorkspace):
 
-    addToLog("Extract_Do_Extract_FTP: Started") # , True)
+    addToLog("Extract_FTP: Started") # , True)
     pkl_file = open('config.pkl', 'rb')
     myConfig = pickle.load(pkl_file)
     pkl_file.close()
@@ -1041,9 +1041,9 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
     startDateTime = startDateTime_str
     endDateTime = datetime.strptime(endDateTime_str, dateFormat_String)
 
-    addToLog("Extract_Do_Extract_FTP: dateFormat_String: " + str(dateFormat_String))
-    addToLog("Extract_Do_Extract_FTP: startDateTime: " + str(startDateTime))
-    addToLog("Extract_Do_Extract_FTP: endDateTime: " + str(endDateTime))
+    addToLog("Extract_FTP: dateFormat_String: " + str(dateFormat_String))
+    addToLog("Extract_FTP: startDateTime: " + str(startDateTime))
+    addToLog("Extract_FTP: endDateTime: " + str(endDateTime))
 
     # KS Refactor For 30 Min Datasets (These next two lines work just fine for the 3 hour dataset... replacing them with a function that adjusts for the next 30 min increment)
     # Start Date adjustment
@@ -1057,7 +1057,7 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
     # Extract_Support_Get_Expected_FTP_Paths_From_DateRange_For_30Min_Datasets
     # get a list of all the files within the start and end date
     expected_FilePath_Objects_To_Extract_WithinRange = Extract_Support_Get_Expected_FTP_Paths_From_DateRange_For_30Min_Datasets(standardized_StartDate, standardized_EndDate, root_FTP_Path, the_FTP_SubFolderPath)
-    addToLog("Extract_Do_Extract_FTP: expected_FilePath_Objects_To_Extract_WithinRange (list to process) " + str(expected_FilePath_Objects_To_Extract_WithinRange) , True)
+    addToLog("Extract_FTP: expected_FilePath_Objects_To_Extract_WithinRange (list to process) " + str(expected_FilePath_Objects_To_Extract_WithinRange) , True)
 
     # KS Refactor for Early Data // Storying the Error Rasters in the return object
     errorRasters_List = []
@@ -1067,20 +1067,20 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
     if numFound == 0:
 
         if startDateTime_str == endDateTime_str:
-            addToLog("Extract_Do_Extract_FTP: ERROR: No files found for the date string "+startDateTime_str)
+            addToLog("Extract_FTP: ERROR: No files found for the date string "+startDateTime_str)
         else:
-            addToLog("Extract_Do_Extract_FTP: ERROR: No files found between "+startDateTime_str+" and "+endDateTime_str)
+            addToLog("Extract_FTP: ERROR: No files found between "+startDateTime_str+" and "+endDateTime_str)
     else:
 
         # Connect to FTP Server
         try:
 
             # QUICK REFACTOR NOTE: Something very strange was happening with the FTP and there isn't time to debug this issue.. going with URL Download instead for now.
-            addToLog("Extract_Do_Extract_FTP: Connecting to FTP", True)
+            addToLog("Extract_FTP: Connecting to FTP", True)
             ftp_Connection = ftplib.FTP(the_FTP_Host,the_FTP_UserName,the_FTP_UserPass)
             time.sleep(1)
 
-            addToLog("Extract_Do_Extract_FTP: Downloading TIF and TFW files for each raster", True)
+            addToLog("Extract_FTP: Downloading TIF and TFW files for each raster", True)
 
             # Holding information for the last FTP folder we changed to.
             lastFolder = ""
@@ -1100,7 +1100,7 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
                     else:
 
                         time.sleep(1)
-                        addToLog("Extract_Do_Extract_FTP: FTP, Changing folder to : " + str(currFTPFolder))
+                        addToLog("Extract_FTP: FTP, Changing folder to : " + str(currFTPFolder))
                         ftp_Connection.cwd("/" + currFTPFolder)
 
                         time.sleep(1)
@@ -1175,11 +1175,11 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
                         lastFTPFolder = curr_FilePath_Object['FTPSubFolderPath']
                         counter_FilesDownloaded += 1
                         if counter_FilesDownloaded % 100 == 0:   # if counter_FilesDownloaded % 20 == 0:
-                            addToLog("Extract_Do_Extract_FTP: Downloaded " + str(counter_FilesDownloaded) + " Rasters ....")
+                            addToLog("Extract_FTP: Downloaded " + str(counter_FilesDownloaded) + " Rasters ....")
 
                     except:
                         # If the raster file is missing or an error occurs during transfer..
-                        addToLog("Extract_Do_Extract_FTP: ERROR.  Error downloading current raster " +  str(curr_FilePath_Object['BaseRasterName']))
+                        addToLog("Extract_FTP: ERROR.  Error downloading current raster " +  str(curr_FilePath_Object['BaseRasterName']))
                         addToLog(Twf_file_to_download)
                         # KS Refactor for Early Data // Storying the Error Rasters in the return object
                         errorRasters_List.append(str(curr_FilePath_Object['BaseRasterName']))
@@ -1187,10 +1187,10 @@ def Extract_Do_Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str
 
         except:
             e = sys.exc_info()[0]
-            errMsg = "Extract_Do_Extract_FTP: ERROR: Could not connect to FTP Server, Error Message: " + str(e)
+            errMsg = "Extract_FTP: ERROR: Could not connect to FTP Server, Error Message: " + str(e)
 
 
-    addToLog("Extract_Do_Extract_FTP: Total number of rasters downloaded: " + str(counter_FilesDownloaded))
+    addToLog("Extract_FTP: Total number of rasters downloaded: " + str(counter_FilesDownloaded))
 
     ret_ExtractObj = {
         'StartDateTime':startDateTime,
@@ -1317,7 +1317,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
         # Keeping the code as it is, so it can be flexible to handle other cases in the future.
         for varDict in varList:
 
-            #addToLog("Transform_Do_Transform_CopyRaster: ----- DEBUG CURRENT ITEM START -----")
+            #addToLog("Transform_CopyRaster: ----- DEBUG CURRENT ITEM START -----")
 
             varName = varDict["variable_name"]
             filePrefix = varDict["file_prefix"]
@@ -1331,7 +1331,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
             hourPart = dateSTR[8:10] # Only want the hh (not yyyymmddhh)
             imerg_DateSTR = dateSTR[:-2] # Only want the yyyymmdd (not yyyymmddhh)
             current_imerg_S_String = get_IMERG_S_String_From_Hour_And_Minute(int(hourPart), int(minutePart))
-            # addToLog("Transform_Do_Transform_CopyRaster: Value of datestring for current raster: (dateSTR_WithMinutes): " + str(dateSTR_WithMinutes))
+            # addToLog("Transform_CopyRaster: Value of datestring for current raster: (dateSTR_WithMinutes): " + str(dateSTR_WithMinutes))
 
             # Build the name of the raster file we're looking for based on
             #   the configuration for the variable and find it in the list
@@ -1361,7 +1361,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
             # If we don't find the file in the list of downloaded files,
             #   skip this variable and move on; otherwise, process the file
             if len(raster_file) == 0:
-                addToLog("Transform_Do_Transform_CopyRaster No file found for expected raster_base_name, " + str(raster_base_name) + "...skipping...")
+                addToLog("Transform_CopyRaster No file found for expected raster_base_name, " + str(raster_base_name) + "...skipping...")
             else:			
                 # Add the output raster location for the full raster path
                 out_raster = os.path.join(rasterOutputLocation, raster_name)
@@ -1379,22 +1379,22 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
 							print arcpy.getMessages()
 						
 						
-					addToLog("Transform_Do_Transform_CopyRaster: Copied "+ os.path.basename(raster_file)+" to "+str(out_raster), True)
+					addToLog("Transform_CopyRaster: Copied "+ os.path.basename(raster_file)+" to "+str(out_raster), True)
                 else:
 					
-                    addToLog("Transform_Do_Transform_CopyRaster: Raster, "+ os.path.basename(raster_file)+" already exists at output location of: "+str(out_raster), True)
+                    addToLog("Transform_CopyRaster: Raster, "+ os.path.basename(raster_file)+" already exists at output location of: "+str(out_raster), True)
 
                 # Apply a color map
                 try:
                     #out_raster=out_raster.replace("\\\\","//")
                     arcpy.AddColormap_management(out_raster, "#", colorMapLocation)
-                    addToLog("Transform_Do_Transform_CopyRaster: Color Map has been applied to "+str(out_raster), True)
+                    addToLog("Transform_CopyRaster: Color Map has been applied to "+str(out_raster), True)
                 except:
-                    addToLog("Transform_Do_Transform_CopyRaster: Error Applying color map to raster : " + str(out_raster) + " ArcPy Error Message: " + str(arcpy.GetMessages()))
+                    addToLog("Transform_CopyRaster: Error Applying color map to raster : " + str(out_raster) + " ArcPy Error Message: " + str(arcpy.GetMessages()))
                 # Define the coordinate system
                 sr = arcpy.SpatialReference(coor_system)
                 arcpy.DefineProjection_management(out_raster, sr)
-                addToLog("Transform_Do_Transform_CopyRaster: Defined coordinate system: "+ str(sr.name), True)
+                addToLog("Transform_CopyRaster: Defined coordinate system: "+ str(sr.name), True)
                 # Append the output file and it's associated variable to the
                 #   list of files processed
                 currRastObj = {
@@ -1407,7 +1407,7 @@ def Transform_Do_Transform_CopyRaster(coor_system, extractResultObj, varList, da
             # END OF Loop (for varDict in varList:)
     except:
         e = sys.exc_info()[0]
-        addToLog("Transform_Do_Transform_CopyRaster: ERROR: Something went wrong during the transform process, Error Message: " + str(e),True)
+        addToLog("Transform_CopyRaster: ERROR: Something went wrong during the transform process, Error Message: " + str(e),True)
 
     # Return the output list
     return outputVarFileList
@@ -1471,7 +1471,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
     for fileDict in transFileList:
         rasterFile = fileDict["out_raster_file_location"]       # Filesystem folder that holds raster files.
         rasterName = os.path.basename(rasterFile).replace(".tif","")     # different filename schema uses this -->  # os.path.basename(rasterFile).split(".")[0]
-        addToLog("Load_Do_Load_TRMM_Dataset: rasterName " + str(rasterName), True)
+        addToLog("Load_Dataset: rasterName " + str(rasterName), True)
         mosaicDSName = fileDict["mosaic_ds_name"]
         primaryDateField = fileDict["primary_date_field"]
         mosaicDS = os.path.join(mdWS, mosaicDSName)             # GeoDB/DatasetName
@@ -1480,7 +1480,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
         # For now, skip the file if the mosaic dataset doesn't exist.  Could
         #   be updated to create the mosaic dataset if it's missing
         if not arcpy.Exists(mosaicDS):
-            addToLog("Load_Do_Load_TRMM_Dataset: Mosaic dataset "+str(mosaicDSName)+", located at, " +str(mosaicDS)+" does not exist.  Skipping "+os.path.basename(rasterFile))
+            addToLog("Load_Dataset: Mosaic dataset "+str(mosaicDSName)+", located at, " +str(mosaicDS)+" does not exist.  Skipping "+os.path.basename(rasterFile))
         else:
             try:
                 # Add raster to mosaic dataset
@@ -1492,27 +1492,27 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
                                                            "2", "#", "#", "#", "#", "NO_SUBFOLDERS",\
                                                            "EXCLUDE_DUPLICATES", "BUILD_PYRAMIDS", "CALCULATE_STATISTICS",\
                                                            "NO_THUMBNAILS", "Add Raster Datasets","#")
-                addToLog("Load_Do_Load_TRMM_Dataset: Added " +str(rasterFile)+" to mosaic dataset "+str(mosaicDSName), True)
+                addToLog("Load_Dataset: Added " +str(rasterFile)+" to mosaic dataset "+str(mosaicDSName), True)
                 numLoaded += 1
 
 
             except:
                 print(arcpy.GetMessages())
                 e = sys.exc_info()[0]
-                addToLog("Load_Do_Load_TRMM_Dataset: ERROR: Something went wrong when adding the raster to the mosaic dataset. Error Message: " + str(e) + " ArcPy Messages" + str(arcpy.GetMessages(2)))
+                addToLog("Load_Dataset: ERROR: Something went wrong when adding the raster to the mosaic dataset. Error Message: " + str(e) + " ArcPy Messages" + str(arcpy.GetMessages(2)))
                 addError = True
 
             if not addError:
                 # Calculate statistics on the mosaic dataset
                 try:
                     arcpy.CalculateStatistics_management(mosaicDS,1,1,"#","SKIP_EXISTING","#")
-                    addToLog("Load_Do_Load_TRMM_Dataset: Calculated statistics on mosaic dataset "+str(mosaicDSName), True)
+                    addToLog("Load_Dataset: Calculated statistics on mosaic dataset "+str(mosaicDSName), True)
                     pass
 
                 # Handle errors for calc statistics
                 except:
                     e = sys.exc_info()[0]
-                    addToLog("Load_Do_Load_TRMM_Dataset: ERROR: Error calculating statistics on mosaic dataset "+str(mosaicDSName)+"  Error Message: " + str(e) + " ArcPy Messages: " + str(arcpy.GetMessages(2)))
+                    addToLog("Load_Dataset: ERROR: Error calculating statistics on mosaic dataset "+str(mosaicDSName)+"  Error Message: " + str(e) + " ArcPy Messages: " + str(arcpy.GetMessages(2)))
                     pass
 
 
@@ -1573,7 +1573,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
                                 row[idx] = attrExprList[idx]
                             cursor.updateRow(row)
 
-                    addToLog("Load_Do_Load_TRMM_Dataset: Calculated attributes for raster", True)
+                    addToLog("Load_Dataset: Calculated attributes for raster", True)
                     del cursor
 
                     # KS Refactor for Early Data // Keeping track of the last datetime object that was loaded
@@ -1584,7 +1584,7 @@ def Load_Do_Load_TRMM_Dataset(transFileList, geoDB_MosaicDataset_Workspace, regE
                 # Handle errors for calculating attributes
                 except:
                     e = sys.exc_info()[0]
-                    addToLog("Load_Do_Load_TRMM_Dataset: ERROR: Error calculating attributes for raster"+str(rasterFile)+"  Error Message: " + str(e))
+                    addToLog("Load_Dataset: ERROR: Error calculating attributes for raster"+str(rasterFile)+"  Error Message: " + str(e))
     retObj = {
         'NumberLoaded': numLoaded,
         'latest_Loaded_DateTimeObject' : latest_Loaded_DateTimeObject       # KS Refactor for Early Data // Keeping track of the last datetime object that was loaded
@@ -2618,7 +2618,7 @@ def PostETL_Controller_Method():
     myConfig = pickle.load(pkl_file)
     pkl_file.close()
     # service_Options_List
-    TRMM_Service_Options = [
+    Service_Options_Accumulations = [
     {
         "Description":"IMERG Accumulations Service",
         "admin_dir_URL":myConfig['admin_dir_URL'],
@@ -2631,7 +2631,7 @@ def PostETL_Controller_Method():
     # Update Service and Build new static composits.
     try:
 
-		PostETL_Do_Update_Service_And_Custom_Rasters(PostETL_CustomRaster_Params, TRMM_Service_Options)
+		PostETL_Do_Update_Service_And_Custom_Rasters(PostETL_CustomRaster_Params, Service_Options_Accumulations)
 		pass
     except:
 		e = sys.exc_info()[0]
@@ -2750,14 +2750,13 @@ def main(config_Settings):
     time_TotalScriptRun_Process = get_NewStart_Time()
 
     # Clear way to show entry in the log file for a script session start
-    addToLog("======================= SESSION START =======================")
+    addToLog("======================= SESSION START ACCUMULATIONS =======================")
 
     # Config Settings
     settingsObj = config_Settings.xmldict['ConfigObjectCollection']['ConfigObject']
 
     # Access to the Config settings example
-    current_ScriptSession_Name =  settingsObj['Name']
-    addToLog("Script Session Name is: " + current_ScriptSession_Name)
+    addToLog("Script Session Name is: IMERG ACCUMULATIONS ETL")
 
     # Set up Detailed Logging
     current_DetailedLogging_Setting = settingsObj['DetailedLogging']
