@@ -517,7 +517,11 @@ def Download_And_Load_CustomRaster(lastRasterName, whichComposite, ftpSubfolder,
     addToLog("Download_And_Load_CustomRaster:  CalculateStatistics_management Finished")
 
     # Copy Rasters from temp location to final location
+<<<<<<< HEAD
     addToLog("Download_And_Load_CustomRaster:  About to copy (refresh) File System Accumulation Raster: " + str(newBaseName + ".tif"))
+=======
+    addToLog("Download_And_Load_CustomRaster:  About to copy (refresh) File System Accumulation Raster: " + str(TIF_FileName))
+>>>>>>> 3b980485d651cd040b7ca0b88464fc955d860c0a
 
     #location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
     source_FolderPath = scratchFolder                       # ex       Z:\\ETLscratch\\IMERG\\PostETL
