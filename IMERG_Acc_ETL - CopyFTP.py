@@ -47,7 +47,7 @@ import boto
 # ETL Support Items (Used in ALL ETLs)
 import ks_ConfigLoader      # Handles loading the xml config file
 import ks_AdpatedLogger     # Handles logging items in a standardized way
-import IMERG_Data as IDC
+
 # This is the location of the config file of which the contents are then used in script execution.
 g_PathToConfigFile = r"D:\SERVIR\Scripts\IMERG\config_IMERG.xml"
 
@@ -434,7 +434,6 @@ def Update_Accumulations_Label_Controller(shapeFilePath, labelTextField, numOfDa
 # ftpSubfolder # Expecting something like : "/pub/gis/201406"
 
 def Download_And_Load_CustomRaster(lastRasterName, whichComposite, ftpSubfolder, ftpParams, scratchFolder, coor_system, pathToGeoDB, rasterDataSetName):
-    IMERG_DataClass =  IDC.IMERG_Data()
     # filter input
     if whichComposite == "1day":
         pass
@@ -448,16 +447,12 @@ def Download_And_Load_CustomRaster(lastRasterName, whichComposite, ftpSubfolder,
 
     # KS Refactor For 30 Min Datasets // Need to replace the 30min part instead of the 3hr
     newBaseName = lastRasterName.replace("30min", whichComposite)
-    TIF_FileName = IMERG_DataClass.get_Expected_FTP_FilePath_To_Tif_Acc(datetime.now().year, datetime.now().month, datetime.now().day)
-    TFW_FileName = IMERG_DataClass.get_Expected_FTP_FilePath_To_Tfw_Acc(datetime.now().year, datetime.now().month, datetime.now().day)
-    req = urllib2.Request("https://proxy.servirglobal.net/ProxyFTP.aspx?directory=ftp://jsimpson.pps.eosdis.nasa.gov/data/imerg/gis/08/")
-    response = urllib2.urlopen(req)
-    tmpList = response.read().split(",")
-
-    location_ToSave_TIF_File = os.path.join(scratchFolder,newBaseName + ".tif")
-    location_ToSave_TFW_File = os.path.join(scratchFolder,newBaseName + ".tfw")
+    TIF_FileName = newBaseName + ".tif"
+    TFW_FileName = newBaseName + ".tfw"
+    location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
+    location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)
     subTransformScratchFolder = os.path.join(scratchFolder,whichComposite)
-    trans_Raster_File = os.path.join(subTransformScratchFolder,newBaseName + ".tif")
+    trans_Raster_File = os.path.join(subTransformScratchFolder,TIF_FileName)
     # Create Temp Subfolder
     try:
         make_And_Validate_Folder(subTransformScratchFolder)
@@ -467,6 +462,15 @@ def Download_And_Load_CustomRaster(lastRasterName, whichComposite, ftpSubfolder,
 
     #addToLog("CUSTOM RASTERS SUB:  Alert L2.... Created (or tried to create) the subfolder.. ")
 
+    # Connect to FTP, download the files  # TRMMs ftp acts funny if we don't enter delays.. thats why using time.sleep(1)
+    # ftpParams : ftpHost, ftpUserName, ftpUserPass
+    time.sleep(1)
+    ftp_Connection = ftplib.FTP(ftpParams['ftpHost'],ftpParams['ftpUserName'],ftpParams['ftpUserPass'])
+    time.sleep(1)
+
+    # Change Folder FTP
+    # Extra ftpSubfolder
+    ftp_Connection.cwd(ftpSubfolder)
     time.sleep(1)
     # Download the TIF and World Files
    #Githika with open(location_ToSave_TIF_File, "wb") as f:
@@ -483,28 +487,74 @@ def Download_And_Load_CustomRaster(lastRasterName, whichComposite, ftpSubfolder,
     #time.sleep(1)
 #Githika
 
-    fx= open(location_ToSave_TIF_File, "wb")
-    fx.close()
-    os.chmod(location_ToSave_TIF_File,0777)	
-    print "creating file: " + location_ToSave_TIF_File
-    print "download path: " + TIF_FileName
     try:
-        urllib.urlretrieve(TIF_FileName, location_ToSave_TIF_File)
-    except Exception, e:
-        os.remove(location_ToSave_TIF_File)  
-        print "removing the tif file: " + str(e)	
-					
-						
-	fx= open(location_ToSave_TFW_File, "wb")
-	fx.close()
-	os.chmod(location_ToSave_TFW_File,0777)	
-	print "creating file: " + location_ToSave_TFW_File
-	print "download path: " + TFW_FileName
-	try:
-		urllib.urlretrieve(TFW_FileName, location_ToSave_TFW_File)
-	except Exception, e:
-		os.remove(location_ToSave_TFW_File)  
-		print "removing the tif file: " + str(e)				
+		location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
+		with open(location_ToSave_TIF_File, "wb") as f:		
+			ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
+			time.sleep(1)
+    except:
+		os.remove(os.path.join(scratchFolder,TIF_FileName))
+
+		TIF_FileName = TIF_FileName.replace("05B", "04B")
+		location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)		
+		try:							
+			with open(location_ToSave_TIF_File, "wb") as f:		
+				ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)		
+				time.sleep(1)
+		except:
+			os.remove(os.path.join(scratchFolder,TIF_FileName))
+
+			TIF_FileName = TIF_FileName.replace("04B", "04A")
+			location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
+			try:							
+				with open(location_ToSave_TIF_File, "wb") as f:			
+					ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
+					time.sleep(1)	
+			except:
+				os.remove(os.path.join(scratchFolder,TIF_FileName))
+
+				TIF_FileName = TIF_FileName.replace("04A", "03E")
+				location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
+				try:							
+					with open(location_ToSave_TIF_File, "wb") as f:			
+						ftp_Connection.retrbinary("RETR %s" % TIF_FileName, f.write)
+						time.sleep(1)	
+				except:
+					addToLog("",True)											
+									
+									
+    try:
+		location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)
+		with open(location_ToSave_TFW_File, "wb") as f:								
+			ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
+			time.sleep(1)
+    except:		
+		os.remove(os.path.join(scratchFolder,TFW_FileName))
+		TFW_FileName = TFW_FileName.replace("05B", "04B")
+		location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)
+		try:														
+			with open(location_ToSave_TFW_File, "wb") as f:								
+				ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
+				time.sleep(1)
+		except:
+			os.remove(os.path.join(scratchFolder,TFW_FileName))
+			TFW_FileName = TFW_FileName.replace("04B", "04A")
+			location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)	
+			try:														
+				with open(location_ToSave_TFW_File, "wb") as f:								
+					ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
+					time.sleep(1)	
+			except:
+				os.remove(os.path.join(scratchFolder,TFW_FileName))
+				TFW_FileName = TFW_FileName.replace("04A", "03E")
+				location_ToSave_TFW_File = os.path.join(scratchFolder,TFW_FileName)	
+				try:														
+					with open(location_ToSave_TFW_File, "wb") as f:								
+						ftp_Connection.retrbinary("RETR %s" % TFW_FileName, f.write)
+						time.sleep(1)
+				except:
+					addToLog("",True)							
+    ftp_Connection.close()
 
     # Apply Transform (Spatial Projection) # Apply the projection BEFORE copying the raster!
     sr = arcpy.SpatialReference(coor_system)
@@ -517,11 +567,11 @@ def Download_And_Load_CustomRaster(lastRasterName, whichComposite, ftpSubfolder,
     addToLog("Download_And_Load_CustomRaster:  CalculateStatistics_management Finished")
 
     # Copy Rasters from temp location to final location
-    addToLog("Download_And_Load_CustomRaster:  About to copy (refresh) File System Accumulation Raster: " + str(newBaseName + ".tif"))
+    addToLog("Download_And_Load_CustomRaster:  About to copy (refresh) File System Accumulation Raster: " + str(TIF_FileName))
 
     #location_ToSave_TIF_File = os.path.join(scratchFolder,TIF_FileName)
     source_FolderPath = scratchFolder                       # ex       Z:\\ETLscratch\\IMERG\\PostETL
-    source_FileName = newBaseName + ".tif"                          # ex       3B-HHR-L.MS.MRG.3IMERG.20150416-S090000-E092959.0540.V03E.7day.tif
+    source_FileName = TIF_FileName                          # ex       3B-HHR-L.MS.MRG.3IMERG.20150416-S090000-E092959.0540.V03E.7day.tif
     source_BaseFileName = source_FileName[:-4]              # ex       3B-HHR-L.MS.MRG.3IMERG.20150416-S090000-E092959.0540.V03E.7day     #os.path.basename(TIF_FileName)
     source_FileExtensionStrings = ["tif", "tfw", "tif.aux.xml", "tif.xml"]
     dest_FolderPath = pathToGeoDB
@@ -540,7 +590,6 @@ def Download_And_Load_CustomRaster(lastRasterName, whichComposite, ftpSubfolder,
 
         # Delete the files that already exist in that location
         try:
-            os.chmod(current_DestFullFilePath,0777)	
             os.remove(current_DestFullFilePath)
             addToLog("Download_And_Load_CustomRaster: Removed file: " + str(current_DestFullFilePath))
             pass
@@ -772,6 +821,7 @@ def PostETL_Support_Build_Custom_Rasters(PostETL_CustomRaster_Params):
         lastRasterName='3B-HHR-L.MS.MRG.3IMERG.'+curr_year+curr_month+curr_date+'-S233000-E235959.1410.V05B.30min'
         # KS Refactor 2015-06-26 # Refactor to place these accumulations in the same folder with the 3hr rasters..
         pathToGeoDB = str(myConfig['geoDB']) 
+        print "hellooo befoew try"
         try:
             Download_And_Load_CustomRaster(lastRasterName, "1day", lastFTPSubFolder, ftpParams, scratchFolder, coor_system, pathToGeoDB, "IMERG1Day") # "TRMM1Day")
         except:

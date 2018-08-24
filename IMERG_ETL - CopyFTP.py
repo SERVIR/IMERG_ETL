@@ -46,7 +46,7 @@ import boto
 # ETL Support Items (Used in ALL ETLs)
 import ks_ConfigLoader      # Handles loading the xml config file
 import ks_AdpatedLogger     # Handles logging items in a standardized way
-import IMERG_Data as IDC
+
 # This is the location of the config file of which the contents are then used in script execution.
 g_PathToConfigFile = r"D:\SERVIR\Scripts\IMERG\config_IMERG.xml"
 
@@ -707,86 +707,49 @@ def Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str, theExtrac
     pkl_file.close()
     # Move these to settings at the earliest opportunity!!
     # IMERG Refactor, new ftp path is ftp://jsimpson.pps.eosdis.nasa.gov/data/imerg/gis/04/
+	Data_Directory = "https://proxy.servirglobal.net/ProxyFTP.aspx?url=ftp://jsimpson.pps.eosdis.nasa.gov/data/imerg/gis/"     
+	the_FTP_Host = myConfig['ftp_host'] #"trmmopen.gsfc.nasa.gov" #"198.118.195.58" #trmmopen.gsfc.nasa.gov"  #"ftp://trmmopen.gsfc.nasa.gov"
+    the_FTP_SubFolderPath = myConfig['ftp_subfolder'] #"pub/gis"
+    the_FTP_UserName = myConfig['ftp_user'] # "anonymous" #
+    the_FTP_UserPass = myConfig['ftp_pswrd'] # "anonymous" #"anonymous" #
+    root_FTP_Path = "ftp://" + str(the_FTP_Host) + "/" + the_FTP_SubFolderPath
     ExtractList = []
     lastBaseRaster = ""
     lastFTPFolder = ""
     counter_FilesDownloaded = 0
     counter_FilesExtracted = 0
-    debugFileDownloadLimiter = 2
-    IMERG_DataClass =  IDC.IMERG_Data()
-    totalRasters=0
+    debugFileDownloadLimiter = 5000
 	
-    # Convert to dates
-    dateFormat = "%Y%m%d"
-    #start_Date = datetime.datetime.strptime(standardized_StartDate, dateFormat)
-    #end_Date = datetime.datetime.strptime(standardized_EndDate, dateFormat)
+    # Get the Start / End datetimes
+    print str(startDateTime_str)
 
-    the_DateFormatString = "%Y%m%d%H" # When appending the string below, the hour component needs to be chopped off
-    the_DateFormatString_WithMinutes = "%Y%m%d%H%M"    
-    the_DateFormatString_ForFileName = "%Y%m%d"
-	
-    # Build expected string list
-    #expected_FTP_FilePaths_TIF = []
-    #expected_FTP_FilePaths_TFW = []
-    expected_FTP_FilePaths = [] # "ftpPathTo_tif"  and "ftpPathTo_tfw
-    # iterate through all dates
+    startDateTime = startDateTime_str
+    endDateTime = endDateTime_str
 
-	
-    dateFormat = "%Y-%m-%d %H:%M:%S"
-    try:
-		start_Date = datetime.datetime.strptime(str(startDateTime_str), dateFormat)
-		end_Date = datetime.datetime.strptime(str(endDateTime_str), dateFormat)	
-		delta= end_Date - start_Date
-		addToLog("Extract_FTP: Started11") # , True)
-    except Exception,e:
-		addToLog(str(e))
-	
-    for i in range(delta.days + 1):
-        #print start_Date + datetime.timedelta(days=i)
-        currentDate = start_Date + datetime.timedelta(days=i)
-        print(currentDate)
-        tifPath = IMERG_DataClass.get_Expected_FTP_FilePath_To_Tif(currentDate.year, currentDate.month, currentDate.day)
-        tfwPath = IMERG_DataClass.get_Expected_FTP_FilePath_To_Tfw(currentDate.year, currentDate.month, currentDate.day)
-        try:
-	
-			currentDateTime = datetime.datetime.strptime(str(currentDate),"%Y-%m-%d %H:%M:%S")		
-			addToLog("Extract_FTP: Started22") # , True)
-        except Exception,e:
-			addToLog(str(e))
-        the_FileNamePart1 = "3B-HHR-L.MS.MRG.3IMERG."  
-        currentHourString = currentDateTime.strftime("%H")
-        currentMinuteString = currentDateTime.strftime("%M")		
-        current_imerg_S_String = get_IMERG_S_String_From_Hour_And_Minute(int(currentHourString), int(currentMinuteString))
-        the_FileNameEnd_30Min_Base = ".V05B.30min" # Version and time frame   # renamed var 'the_FileNameEnd_3Hr_Base' to 'the_FileNameEnd_30Min_Base'
-        currentYearString = currentDateTime.strftime("%Y")
+    addToLog("Extract_FTP: dateFormat_String: " + str(dateFormat_String))
+    addToLog("Extract_FTP: startDateTime: " + str(startDateTime))
+    addToLog("Extract_FTP: endDateTime: " + str(endDateTime))
+    x=int(str(startDateTime)[14:16])
+    y=int(str(endDateTime)[14:16])
 
-        currentMonthString = currentDateTime.strftime("%m")		
-        if int(currentYearString)==datetime.datetime.now().year:
-			currentFTP_Subfolder = myConfig['ftp_subfolder'] + "/" + currentMonthString # IMERG TIF FTP has a different folder structure.. only the months..
-
-        else:
-			currentFTP_Subfolder = myConfig['ftp_subfolder'] + "/" + currentYearString+"/"+currentMonthString # IMERG TIF FTP has a different folder structure.. only the months..
-        currentDateString = currentDateTime.strftime(the_DateFormatString)		
-        currentDateString_WithMinutes = currentDateTime.strftime(the_DateFormatString_WithMinutes)	
-        currentDateString_ForFileName = currentDateTime.strftime(the_DateFormatString_ForFileName)
-		
-        currentRasterBaseName = the_FileNamePart1 + currentDateString_ForFileName + current_imerg_S_String + the_FileNameEnd_30Min_Base
-        objToAdd = {
-                    "ftpPathTo_tif":tifPath,
-                    "ftpPathTo_tfw":tfwPath,
-            "FTPSubFolderPath" : currentFTP_Subfolder,             
-					
-					"DateString" : currentDateString,
-                    "DateString_WithMinutes" : currentDateString_WithMinutes,
-					"BaseRasterName" : currentRasterBaseName,           
-
-                    }
-        expected_FTP_FilePaths.append(objToAdd)
-		
-		
+    # KS Refactor For 30 Min Datasets (These next two lines work just fine for the 3 hour dataset... replacing them with a function that adjusts for the next 30 min increment)
+    # Start Date adjustment
+    newStart_Minute = Extract_Support_Get_Last_30_Min(x)
+    print str(newStart_Minute)
+    standardized_StartDate = Extract_Support_Set_DateToStandard_30_Minute(newStart_Minute, str(startDateTime))
+    # KS Refactor For 30 Min Datasets (These next two lines work just fine for the 3 hour dataset... replacing them with a function that adjusts for the next 30 min increment)
+    # End Date adjustment
+    newEnd_Minute = Extract_Support_Get_Last_30_Min(y)
+    standardized_EndDate = Extract_Support_Set_DateToStandard_30_Minute(newEnd_Minute, str(endDateTime))
+    # KS Refactor For 30 Min Datasets // Created a couple of new functions including 'Extract_Support_Get_Expected_FTP_Paths_From_DateRange_For_30Min_Datasets' to handle 30 min files
+    # Extract_Support_Get_Expected_FTP_Paths_From_DateRange_For_30Min_Datasets
+    # get a list of all the files within the start and end date
+    expected_FilePath_Objects_To_Extract_WithinRange = Extract_Support_Get_Expected_FTP_Paths_From_DateRange_For_30Min_Datasets(standardized_StartDate, standardized_EndDate, root_FTP_Path, the_FTP_SubFolderPath)
+    #addToLog("Extract_FTP: expected_FilePath_Objects_To_Extract_WithinRange (list to process) " + str(expected_FilePath_Objects_To_Extract_WithinRange) , True)
+    # KS Refactor for Early Data // Storying the Error Rasters in the return object
     errorRasters_List = []
 
-    numFound = len(expected_FTP_FilePaths)
+    numFound = len(expected_FilePath_Objects_To_Extract_WithinRange)
     if numFound == 0:
 
         if startDateTime_str == endDateTime_str:
@@ -795,85 +758,149 @@ def Extract_FTP(dateFormat_String, startDateTime_str, endDateTime_str, theExtrac
             addToLog("Extract_FTP: ERROR: No files found between "+startDateTime_str+" and "+endDateTime_str)
     else:
 
+        # Connect to FTP Server
         try:
+
+            # QUICK REFACTOR NOTE: Something very strange was happening with the FTP and there isn't time to debug this issue.. going with URL Download instead for now.
+            #addToLog("Extract_FTP: Connecting to FTP", True)
+            ftp_Connection = ftplib.FTP(the_FTP_Host,the_FTP_UserName,the_FTP_UserPass)
+            time.sleep(1)
+
+            addToLog("Extract_FTP: Downloading TIF and TFW files for each raster", True)
+
+            # Holding information for the last FTP folder we changed to.
             lastFolder = ""
-            downloadCounter = 0
+
             # Iterate through each key file path and and perform the extraction.
-            for curr_FilePath_Object in expected_FTP_FilePaths: 
-				
-				isError = False
-				errorLog = []
-				
-				# print progress
-				if(downloadCounter % 10 == 0):
-					print("-Downloaded: " + str(downloadCounter) + " rasters so far..")
-				# Get the file names
-				filenameOnly_Tif = curr_FilePath_Object['ftpPathTo_tif'].split('/')[-1]
-				filenameOnly_Tfw = curr_FilePath_Object['ftpPathTo_tfw'].split('/')[-1]
-				
-				# Make local filenames
-				local_FullFilePath_ToSave_Tif = os.path.join(theExtractWorkspace, filenameOnly_Tif)
-				local_FullFilePath_ToSave_Twf = os.path.join(theExtractWorkspace, filenameOnly_Tfw)
-				
-				# Get directoryPath and Filename for FTP Server
-				ftp_PathTo_TIF = curr_FilePath_Object['ftpPathTo_tif'] #IMERG_DataClass._get_FTP_FolderPath_From_FullFilePath(ftpFullFilePaths['ftpPathTo_tif'])
-				ftp_PathTo_TWF= curr_FilePath_Object['ftpPathTo_tfw']# IMERG_DataClass._get_FTP_FolderPath_From_FullFilePath(ftpFullFilePaths['ftpPathTo_tfw'])
+            for curr_FilePath_Object in expected_FilePath_Objects_To_Extract_WithinRange:
 
-				# Download the Tif
+                if counter_FilesDownloaded < debugFileDownloadLimiter:
+                    # FTP, Change to folder,
+                    currFTPFolder = curr_FilePath_Object['FTPSubFolderPath']
 
-				fx= open(local_FullFilePath_ToSave_Tif, "wb")
-				fx.close()
-				os.chmod(local_FullFilePath_ToSave_Tif,0777)	
-				print "creating file: " + local_FullFilePath_ToSave_Tif
-				print "download path: " + ftp_PathTo_TIF
-				try:
-					urllib.urlretrieve(ftp_PathTo_TIF, local_FullFilePath_ToSave_Tif)
-				except Exception, e:
-					os.remove(local_FullFilePath_ToSave_Tif)  
-					errorRasters_List.append(str(curr_FilePath_Object['BaseRasterName']))
+                    # Only change folders if we need to.
+                    if currFTPFolder == lastFolder:
+                        # Do nothing
 
-					print "removing the tif file: " + str(e)
-				# Download the Tfw
-				fx= open(local_FullFilePath_ToSave_Twf, "wb")
-				fx.close()
-				os.chmod(local_FullFilePath_ToSave_Twf,0777)	
-				try:
-					urllib.urlretrieve(ftp_PathTo_TWF, local_FullFilePath_ToSave_Twf)
-				except:
-					os.remove(local_FullFilePath_ToSave_Twf)  
-					errorRasters_List.append(str(curr_FilePath_Object['BaseRasterName']))
+                        pass
+                    else:
 
-					print "removing the twf file"
-				if isError == True:
-					# try and remove the file??
-					pass
-				
-				downloadCounter += 1
-				totalRasters=downloadCounter
-				extractedFileList = []
-				extractedFileList.append(local_FullFilePath_ToSave_Tif)
-				current_Extracted_Obj = {
-						'DateString' : curr_FilePath_Object['DateString'],
-						'DateString_WithMinutes' : curr_FilePath_Object['DateString_WithMinutes'],      # KS Refactor For 30 Min Datasets // Added more detailed DateString
-						'Downloaded_FilePath' : local_FullFilePath_ToSave_Tif,
-						'ExtractedFilesList' : convert_Obj_To_List(extractedFileList),
-						'downloadURL' : curr_FilePath_Object['ftpPathTo_tif'], #currentURL_ToDownload
-						'FTP_DataObj' : curr_FilePath_Object
-					}
-				ExtractList.append(current_Extracted_Obj)				
-				lastBaseRaster = curr_FilePath_Object['BaseRasterName']
-				lastFTPFolder = curr_FilePath_Object['FTPSubFolderPath']			    
-            pass
+                        time.sleep(1)
+                        addToLog("Extract_FTP: FTP, Changing folder to : " + str(currFTPFolder))
+                        ftp_Connection.cwd("/" + currFTPFolder)
+
+                        time.sleep(1)
+
+                    lastFolder = currFTPFolder
+                    try:
+                        # Attempt to download the TIF and World File (Tfw)
+                        Tif_file_to_download = curr_FilePath_Object['TIF_30Min_FileName'] #['TIF_3Hr_FileName']     # KS Refactor For 30 Min Datasets // Previous Rename affected this line						
+                        try:
+                            #addToLog("TIF file downloaded: "+Tif_file_to_download) 
+
+                            downloadedFile_TIF = os.path.join(theExtractWorkspace,Tif_file_to_download)
+                            with open(downloadedFile_TIF, "wb") as f:			
+							
+								ftp_Connection.retrbinary("RETR %s" % Tif_file_to_download, f.write)
+								time.sleep(1)
+                        except:
+                            os.remove(os.path.join(theExtractWorkspace,Tif_file_to_download))
+                            Tif_file_to_download = Tif_file_to_download.replace("03E", "04A")
+                            downloadedFile_TIF = os.path.join(theExtractWorkspace,Tif_file_to_download)	
+							
+                            try:							
+								with open(downloadedFile_TIF, "wb") as f:			
+									ftp_Connection.retrbinary("RETR %s" % Tif_file_to_download, f.write)
+									time.sleep(1)
+                            except:
+								os.remove(os.path.join(theExtractWorkspace,Tif_file_to_download))
+								Tif_file_to_download = Tif_file_to_download.replace("04A", "04B")
+								downloadedFile_TIF = os.path.join(theExtractWorkspace,Tif_file_to_download)
+								try:							
+									with open(downloadedFile_TIF, "wb") as f:			
+										ftp_Connection.retrbinary("RETR %s" % Tif_file_to_download, f.write)
+										time.sleep(1)	
+								except:
+									os.remove(os.path.join(theExtractWorkspace,Tif_file_to_download))
+									Tif_file_to_download = Tif_file_to_download.replace("04B", "05B")
+									downloadedFile_TIF = os.path.join(theExtractWorkspace,Tif_file_to_download)
+									try:							
+										with open(downloadedFile_TIF, "wb") as f:			
+											ftp_Connection.retrbinary("RETR %s" % Tif_file_to_download, f.write)
+											time.sleep(1)	
+									except:
+										addToLog("",True)												
+						
+                        Twf_file_to_download = curr_FilePath_Object['TWF_30Min_FileName'] #['TWF_3Hr_FileName']    # KS Refactor For 30 Min Datasets // Previous Rename affected this line
+                        try:
+                            #addToLog("TFW file downloaded: "+Tif_file_to_download) 
+
+                            downloadedFile_TFW = os.path.join(theExtractWorkspace,Twf_file_to_download)
+                            with open(downloadedFile_TFW, "wb") as f:								
+								ftp_Connection.retrbinary("RETR %s" % Twf_file_to_download, f.write)
+								time.sleep(1)
+                        except:			
+                            os.remove(os.path.join(theExtractWorkspace,Twf_file_to_download))						
+                            Twf_file_to_download = Twf_file_to_download.replace("03E", "04A")
+                            downloadedFile_TFW = os.path.join(theExtractWorkspace,Twf_file_to_download)
+                            try:														
+								with open(downloadedFile_TFW, "wb") as f:								
+									ftp_Connection.retrbinary("RETR %s" % Twf_file_to_download, f.write)
+									time.sleep(1)
+                            except:
+								os.remove(os.path.join(theExtractWorkspace,Twf_file_to_download))							
+								Twf_file_to_download = Twf_file_to_download.replace("04A", "04B")
+								downloadedFile_TFW = os.path.join(theExtractWorkspace,Twf_file_to_download)	
+								try:														
+									with open(downloadedFile_TFW, "wb") as f:								
+										ftp_Connection.retrbinary("RETR %s" % Twf_file_to_download, f.write)
+										time.sleep(1)	
+								except:
+									os.remove(os.path.join(theExtractWorkspace,Twf_file_to_download))							
+									Twf_file_to_download = Twf_file_to_download.replace("04B", "05B")
+									downloadedFile_TFW = os.path.join(theExtractWorkspace,Twf_file_to_download)	
+									try:														
+										with open(downloadedFile_TFW, "wb") as f:								
+											ftp_Connection.retrbinary("RETR %s" % Twf_file_to_download, f.write)
+											time.sleep(1)	
+									except:
+										addToLog("",True)
+                        # Two files were downloaed (or 'extracted') but we really only need a reference to 1 file (thats what the transform expects).. and Arc actually understands the association between the TIF and TWF files automatically
+                        extractedFileList = []
+                        extractedFileList.append(downloadedFile_TIF)
+                        current_Extracted_Obj = {
+                                'DateString' : curr_FilePath_Object['DateString'],
+                                'DateString_WithMinutes' : curr_FilePath_Object['DateString_WithMinutes'],      # KS Refactor For 30 Min Datasets // Added more detailed DateString
+                                'Downloaded_FilePath' : downloadedFile_TIF,
+                                'ExtractedFilesList' : convert_Obj_To_List(extractedFileList),
+                                'downloadURL' : curr_FilePath_Object['FTP_PathTo_TIF'], #currentURL_ToDownload
+                                'FTP_DataObj' : curr_FilePath_Object
+                            }
+                        ExtractList.append(current_Extracted_Obj)
+                        lastBaseRaster = curr_FilePath_Object['BaseRasterName']
+                        lastFTPFolder = curr_FilePath_Object['FTPSubFolderPath']
+                        counter_FilesDownloaded += 1
+                        if counter_FilesDownloaded % 100 == 0:   # if counter_FilesDownloaded % 20 == 0:
+                            addToLog("Extract_FTP: Downloaded " + str(counter_FilesDownloaded) + " Rasters ....")
+
+                    except:
+                        # If the raster file is missing or an error occurs during transfer..
+                        addToLog("Extract_FTP: ERROR.  Error downloading current raster " +  str(curr_FilePath_Object['BaseRasterName']))
+                        addToLog(Twf_file_to_download)
+                        # KS Refactor for Early Data // Storying the Error Rasters in the return object
+                        errorRasters_List.append(str(curr_FilePath_Object['BaseRasterName']))
+
+
         except:
             e = sys.exc_info()[0]
             errMsg = "Extract_FTP: ERROR: Could not connect to FTP Server, Error Message: " + str(e)
 
 
-    addToLog("Extract_FTP: Total number of rasters downloaded: " + str(totalRasters))
+    addToLog("Extract_FTP: Total number of rasters downloaded: " + str(counter_FilesDownloaded))
 
     ret_ExtractObj = {
-        'StartDateTime':start_Date,
-        'EndDateTime': end_Date,
+        'StartDateTime':startDateTime,
+        'EndDateTime': endDateTime,
         'ExtractList':ExtractList,
         'lastBaseRaster' : lastBaseRaster,
         'lastFTPFolder' : lastFTPFolder,
